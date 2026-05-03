@@ -1,4 +1,4 @@
-# tiandoufayale's Clash Configuration Template
+
 # Use this link in your Subconverter 'Remote Config'
 Urltest_Base: &Urltest_Base {
   type: url-test, 
