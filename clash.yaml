@@ -10,20 +10,6 @@ profile:
   store-selected: true
   store-fake-ip: true
 
-sniffer:
-  enable: true
-  sniff:
-    HTTP:
-      ports: [80, 8080-8880]
-      override-destination: true
-    TLS:
-      ports: [443, 8443]
-    QUIC:
-      ports: [443, 8443]
-  skip-domain:
-    - "Mijia Cloud"
-    - "+.push.apple.com"
-    - "+.wechat.com"
 
 # ================= DNS 配置 =================
 dns:
@@ -44,7 +30,6 @@ dns:
   default-nameserver:
     - 223.5.5.5
   proxy-server-nameserver:
-    - https://xy5dhsqivy.cloudflare-gateway.com/dns-query
     - https://dns.alidns.com/dns-query
   nameserver:
     - https://dns.alidns.com/dns-query
@@ -54,10 +39,8 @@ dns:
     "geosite:google-play@cn,apple-cn,microsoft@cn,steam@cn,category-games@cn":
       - https://dns.alidns.com/dns-query
     "geosite:gfw,geolocation-!cn,google,github,telegram,openai":
-      - https://xy5dhsqivy.cloudflare-gateway.com/dns-query
       - https://dns.google/dns-query
   fallback:
-    - https://xy5dhsqivy.cloudflare-gateway.com/dns-query
     - https://dns.google/dns-query
   fallback-filter:
     geoip: true
