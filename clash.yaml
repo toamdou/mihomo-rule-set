@@ -1,35 +1,31 @@
 
-# Use this link in your Subconverter 'Remote Config'
-Urltest_Base: &Urltest_Base {
-  type: url-test, 
-  include-all: true, 
-  url: "https://www.gstatic.com/generate_204", 
-  interval: 300, 
-  tolerance: 50, 
-  max-failed-times: 1, 
-  hidden: true
-}
-
-# 外部机场通用配置锚点 
-PProviders: &PProviders {type: http, interval: 86400, health-check: {enable: true, url: 'https://www.gstatic.com/generate_204', interval: 300}, filter: '^(?!.*(拒绝 | 直连 | 群 | 邀请 | 返利 | 循环 | 官网 | 客服 | 网站 | 网址 | 获取 | 订阅 | 流量 | 到期 | 机场 | 下次 | 版本 | 官址 | 备用 | 过期 | 已用 | 联系 | 邮箱 | 工单 | 贩卖 | 通知 | 倒卖 | 防止 | 国内 | 地址 | 频道 | 无法 | 说明 | 提示 | 特别 | 访问 | 支持 | 教程 | 关注 | 更新 | 作者 | 加入 |USE|USED|TOTAL|EXPIRE|EMAIL|Panel|Channel|Author|traffic))'}
-
-proxy-providers:
-  Airport_01:
-    <<: *PProviders
-    proxy: "🚀 节点选择"
-    override:
-      additional-prefix: '[机场 1]'
-
-# 全局配置
+# ================= 全局配置 =================
 mixed-port: 7890 
-tcp-concurrent: true
-geodata-loader: memconservative
+geodata-loader: standard # 保持 standard 以确保 GeoIP 规则稳定加载
 ipv6: true
 allow-lan: true
 unified-delay: true
+
 profile:
   store-selected: true
   store-fake-ip: true
+
+sniffer:
+  enable: true
+  sniff:
+    HTTP:
+      ports: [80, 8080-8880]
+      override-destination: true
+    TLS:
+      ports: [443, 8443]
+    QUIC:
+      ports: [443, 8443]
+  skip-domain:
+    - "Mijia Cloud"
+    - "+.push.apple.com"
+    - "+.wechat.com"
+
+# ================= DNS 配置 =================
 dns:
   enable: true
   listen: 127.0.0.1:1053
@@ -45,12 +41,10 @@ dns:
   fake-ip-filter-mode: blacklist 
   fake-ip-filter:
     - "rule-set:fakeip_filter_domain"
-    - "rule-set:private_domain"
-    - "rule-set:cn_domain"
   default-nameserver:
     - 223.5.5.5
-# 代理服务器域名的解析，必须走国内 DNS 确保能连上节点
   proxy-server-nameserver:
+    - https://xy5dhsqivy.cloudflare-gateway.com/dns-query
     - https://dns.alidns.com/dns-query
   nameserver:
     - https://dns.alidns.com/dns-query
@@ -60,48 +54,56 @@ dns:
     "geosite:google-play@cn,apple-cn,microsoft@cn,steam@cn,category-games@cn":
       - https://dns.alidns.com/dns-query
     "geosite:gfw,geolocation-!cn,google,github,telegram,openai":
+      - https://xy5dhsqivy.cloudflare-gateway.com/dns-query
       - https://dns.google/dns-query
   fallback:
-      - https://dns.google/dns-query
+    - https://xy5dhsqivy.cloudflare-gateway.com/dns-query
+    - https://dns.google/dns-query
   fallback-filter:
     geoip: true
     geoip-code: CN
     geosite:
       - geolocation-!cn
       - gfw
-    ipcidr:
-    - 240.0.0.0/4
+    ipcidr: 
+      - 240.0.0.0/4
+
+# ================= 代理提供者 =================
+proxy-providers:
+  Airport_01:
+    <<: &PProviders {type: http, interval: 86400, health-check: {enable: true, url: 'https://www.gstatic.com/generate_204', interval: 300}, filter: '^(?!.*(拒绝 | 直连 | 群 | 邀请 | 返利 | 循环 | 官网 | 客服 | 网站 | 网址 | 获取 | 订阅 | 流量 | 到期 | 机场 | 下次 | 版本 | 官址 | 备用 | 过期 | 已用 | 联系 | 邮箱 | 工单 | 贩卖 | 通知 | 倒卖 | 防止 | 国内 | 地址 | 频道 | 无法 | 说明 | 提示 | 特别 | 访问 | 支持 | 教程 | 关注 | 更新 | 作者 | 加入 |USE|USED|TOTAL|EXPIRE|EMAIL|Panel|Channel|Author|traffic))'}
+    proxy: DIRECT  
+    override:
+      additional-prefix: '[机场 1]'
+
+# ================= 策略组配置 =================
 proxy-groups:
-  - {name: 🚀 节点选择, type: select, no-resolve: true, proxies: [♻️ 自动选择, 🇭🇰 香港节点, 🇯🇵 日本节点, 🇺🇲 美国节点, 🇲🇾 亚洲节点, 🇪🇺 欧洲节点, 🚀 手动切换, 🎯 全球直连], icon: "https://pub-8feead0908f649a8b94397f152fb9cba.r2.dev/select.png"}
-
-  - {name: 📲 电报消息, type: select, proxies: [🚀 节点选择, 🇭🇰 香港节点, 🇯🇵 日本节点, 🇺🇲 美国节点, 🇲🇾 亚洲节点, 🇪🇺 欧洲节点, ♻️ 自动选择, 🎯 全球直连], icon: "https://pub-8feead0908f649a8b94397f152fb9cba.r2.dev/telegram.png"}
-
-  - {name: 💬 Ai平台, type: select, proxies: [🇭🇰 香港节点, 🇯🇵 日本节点, 🇺🇲 美国节点, 🇲🇾 亚洲节点, 🇪🇺 欧洲节点, 🚀 手动切换], icon: "https://pub-8feead0908f649a8b94397f152fb9cba.r2.dev/ai.png"}
-
-  - {name: Google, type: select, proxies: [🇭🇰 香港节点, 🇯🇵 日本节点, 🇺🇲 美国节点, 🇲🇾 亚洲节点, 🇪🇺 欧洲节点, 🚀 手动切换]}
-
+  - {name: 🚀 节点选择, type: select, no-resolve: true, proxies: [♻️ 自动选择, 🇭🇰 香港节点, 🇯🇵 日本节点, 🇺🇲 美国节点, 🇲🇾 亚洲节点, 🇪🇺 欧洲节点, 🇲🇾 新加坡节点, 🚀 手动切换, 🎯 全球直连], icon: "https://pub-8feead0908f649a8b94397f152fb9cba.r2.dev/select.png"}
+  - {name: 📲 电报消息, type: select, proxies: [🚀 节点选择, 🇭🇰 香港节点, 🇯🇵 日本节点, 🇺🇲 美国节点, 🇲🇾 亚洲节点, 🇪🇺 欧洲节点, 🇲🇾 新加坡节点, ♻️ 自动选择, 🎯 全球直连], icon: "https://pub-8feead0908f649a8b94397f152fb9cba.r2.dev/telegram.png"}
+  - {name: 💬 Ai平台, type: select, proxies: [🇭🇰 香港节点, 🇯🇵 日本节点, 🇺🇲 美国节点, 🇲🇾 亚洲节点, 🇪🇺 欧洲节点, 🇲🇾 新加坡节点, 🚀 手动切换], icon: "https://pub-8feead0908f649a8b94397f152fb9cba.r2.dev/ai.png"}
+  - {name: Google, type: select, proxies: [🇭🇰 香港节点, 🇯🇵 日本节点, 🇺🇲 美国节点, 🇲🇾 亚洲节点, 🇪🇺 欧洲节点, 🇲🇾 新加坡节点, 🚀 手动切换]}
   - {name: 🎯 全球直连, type: select, proxies: [DIRECT, ♻️ 自动选择], icon: "https://pub-8feead0908f649a8b94397f152fb9cba.r2.dev/direct.png"}
-
   - {name: 广告拦截, type: select, proxies: [REJECT]}
-
-  - {name: 🐟 漏网之鱼, type: select, proxies: [🚀 节点选择, 🇭🇰 香港节点, 🇯🇵 日本节点, 🇺🇲 美国节点, 🇲🇾 亚洲节点, 🇪🇺 欧洲节点, ♻️ 自动选择, 🎯 全球直连], icon: "https://pub-8feead0908f649a8b94397f152fb9cba.r2.dev/final.png"}
-
+  - {name: 🐟 漏网之鱼, type: select, proxies: [🚀 节点选择, 🇭🇰 香港节点, 🇯🇵 日本节点, 🇺🇲 美国节点, 🇲🇾 亚洲节点, 🇪🇺 欧洲节点, 🇲🇾 新加坡节点, ♻️ 自动选择, 🎯 全球直连], icon: "https://pub-8feead0908f649a8b94397f152fb9cba.r2.dev/final.png"}
   - {name: 🚀 手动切换, type: select, include-all: true}
-
   - {name: ♻️ 自动选择, type: url-test, include-all: true, interval: 300, tolerance: 50}
-
-  - {name: 🇭🇰 香港节点, <<: *Urltest_Base, include-all: true, filter: "(?i)(港|HK|hk|Hong Kong|🇭🇰)", icon: "https://pub-8feead0908f649a8b94397f152fb9cba.r2.dev/Hongkong.png"}
-
+  
+  # 修复：将 Urltest_Base 锚点直接在此处定义，后续节点直接引用 *Urltest_Base
+  - name: 🇭🇰 香港节点
+    <<: &Urltest_Base {type: url-test, include-all: true, url: "https://www.gstatic.com/generate_204", interval: 300, tolerance: 50, max-failed-times: 1, hidden: true}
+    filter: "(?i)(港|HK|hk|Hong Kong|🇭🇰)"
+    icon: "https://pub-8feead0908f649a8b94397f152fb9cba.r2.dev/Hongkong.png"
+    
   - {name: 🇯🇵 日本节点, <<: *Urltest_Base, include-all: true, filter: "(?i)(日本|🇯🇵|JP|Japan)", icon: "https://pub-8feead0908f649a8b94397f152fb9cba.r2.dev/Japan.png"}
-
   - {name: 🇺🇲 美国节点, <<: *Urltest_Base, include-all: true, filter: "(?i)(美国|美|🇺🇲|🇺🇸|US|America|United States)", icon: "https://pub-8feead0908f649a8b94397f152fb9cba.r2.dev/America.png"}
-
-  - {name: 🇲🇾 亚洲节点, <<: *Urltest_Base, include-all: true, filter: "(?i)(马来|泰国|越南|VN|KR|Korea|KOR|首尔|韩|台|🇹🇼|TW|Taiwan|新|🇸🇬|SG|Singapore)"}
-
+  - {name: 🇲🇾 亚洲节点, <<: *Urltest_Base, include-all: true, filter: "(?i)(马来|泰国|越南|VN|KR|Korea|KOR|首尔|韩|台|🇹🇼|TW|Taiwan)"}
+  - {name: 🇲🇾 新加坡节点, <<: *Urltest_Base, include-all: true, filter: "(?i)(新|🇸🇬|SG|Singapore)"}
   - {name: 🇪🇺 欧洲节点, <<: *Urltest_Base, include-all: true, filter: "(?i)(英国|德国|卢森堡|法国|俄罗斯|France|Deutschland|United Kingdom|Italy|Netherland)"}
+
+# ================= 路由规则 =================
 rules:
   - RULE-SET,banad,广告拦截
-
+  - RULE-SET,ads,广告拦截
   - RULE-SET,private_domain,🎯 全球直连
   - RULE-SET,microsoft_cn_domain,🎯 全球直连
   - RULE-SET,steamcdn_domain,🎯 全球直连
@@ -112,10 +114,10 @@ rules:
   - GEOSITE,MICROSOFT@CN,🎯 全球直连
   - GEOSITE,STEAM@CN,🎯 全球直连
   - GEOSITE,CATEGORY-GAMES@CN,🎯 全球直连
-
+  - RULE-SET,apple_domain,🎯 全球直连
 
   - RULE-SET,telegram_domain,📲 电报消息
-  - RULE-SET,telegram_ip,📲 电报消息,no-resolve
+  - RULE-SET,telegram_ip,📲 电报消息,no-resolve 
 
   - GEOSITE,GOOGLE,Google
   - RULE-SET,google,Google,no-resolve
@@ -127,26 +129,29 @@ rules:
   - RULE-SET,proxy_domain,🚀 节点选择
   - RULE-SET,gfw_domain,🚀 节点选择
   - RULE-SET,tldproxy,🚀 节点选择
-  - RULE-SET,Cloudflare_ip,🚀 节点选择,no-resolve
+  - RULE-SET,apple_nocn_domain,🚀 节点选择
+  - RULE-SET,Cloudflare_ip,🚀 节点选择,no-resolve 
   - RULE-SET,twitter_ip,🚀 节点选择,no-resolve
   - RULE-SET,ai_domain,💬 Ai平台
   - RULE-SET,openai_domain,💬 Ai平台
   - RULE-SET,cn_domain,🎯 全球直连
   - DOMAIN-SUFFIX,modelscope.cn,🎯 全球直连
-  - RULE-SET,private_ip,🎯 全球直连,no-resolve
-  - RULE-SET,cn_ip,🎯 全球直连,no-resolve
-  - RULE-SET,steamcdn_ip,🎯 全球直连,no-resolve
+  - RULE-SET,private_ip,🎯 全球直连,no-resolve #
+  - RULE-SET,cn_ip,🎯 全球直连,no-resolve 
+  - RULE-SET,steamcdn_ip,🎯 全球直连,no-resolve 
 
   - MATCH,🐟 漏网之鱼
 
-# 规则集定义
-rule-anchor:
-  ip: &ip {type: http, interval: 86400, behavior: ipcidr, format: mrs}
-  domain: &domain {type: http, interval: 86400, behavior: domain, format: mrs}
 
 rule-providers:
-  fakeip_filter_domain: { <<: *domain, url: "https://github.com/DustinWin/ruleset_geodata/releases/download/mihomo-ruleset/fakeip-filter-lite.mrs" }
-  Cloudflare_ip: { <<: *ip, url: "https://github.com/MetaCubeX/meta-rules-dat/raw/refs/heads/meta/geo/geoip/cloudflare.mrs" }
+  fakeip_filter_domain: 
+    <<: &domain {type: http, interval: 86400, behavior: domain, format: mrs}
+    url: "https://github.com/DustinWin/ruleset_geodata/releases/download/mihomo-ruleset/fakeip-filter.mrs"
+    
+  Cloudflare_ip: 
+    <<: &ip {type: http, interval: 86400, behavior: ipcidr, format: mrs}
+    url: "https://github.com/MetaCubeX/meta-rules-dat/raw/refs/heads/meta/geo/geoip/cloudflare.mrs"
+    
   ai_domain: { <<: *domain, url: "https://github.com/DustinWin/ruleset_geodata/releases/download/mihomo-ruleset/ai.mrs" }
   youtube_domain: { <<: *domain, url: "https://github.com/DustinWin/ruleset_geodata/releases/download/mihomo-ruleset/youtube.mrs" }
   cn_domain: { <<: *domain, url: "https://github.com/DustinWin/ruleset_geodata/releases/download/mihomo-ruleset/cn.mrs" }
@@ -165,6 +170,9 @@ rule-providers:
   private_ip: { <<: *ip, url: "https://github.com/DustinWin/ruleset_geodata/releases/download/mihomo-ruleset/privateip.mrs" }
   steamcdn_ip: { <<: *ip, url: "https://raw.githubusercontent.com/Lanlan13-14/Rules/refs/heads/main/rules/IP/steamCDN-ip.mrs" }
   fcm: { <<: *domain, url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/refs/heads/meta/geo/geosite/googlefcm.mrs" }
-  banad: { <<: *domain, url: "https://raw.githubusercontent.com/TG-Twilight/AWAvenue-Ads-Rule/main/Filters/AWAvenue-Ads-Rule-Clash.mrs" }
+  banad: { <<: *domain, url: "https://gcore.jsdelivr.net/gh/217heidai/adblockfilters@main/rules/adblockmihomo.mrs" }
   tldproxy: { <<: *domain, url: "https://github.com/DustinWin/ruleset_geodata/releases/download/mihomo-ruleset/tld-proxy.mrs" }
   github_domain: { <<: *domain, url: "https://github.com/MetaCubeX/meta-rules-dat/raw/refs/heads/meta/geo/geosite/github.mrs" }
+  apple_domain: { <<: *domain, url: "https://github.com/DustinWin/ruleset_geodata/releases/download/mihomo-ruleset/apple-cn.mrs" }
+  ads: { <<: *domain, url: "https://raw.githubusercontent.com/privacy-protection-tools/anti-ad.github.io/master/docs/mihomo.mrs" }
+  apple_nocn_domain: { <<: *domain, url: "https://github.com/666OS/rules/raw/refs/heads/release/mihomo/domain/Apple.mrs" }
